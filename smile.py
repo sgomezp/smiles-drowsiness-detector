@@ -2,7 +2,7 @@ from imutils import face_utils
 import dlib
 import cv2
 import time
-import streamlit as st
+import av
 
 def dist(a,b):
     "Calcula la distancia euclidiana entre dos puntos"
@@ -36,20 +36,18 @@ THRES = 0.27 # Por ensayo y error este umbral es el que mejor se ajusta
 required_smiling_frames = 10  # Numbers of frames required to confirm a smile
 required_not_smiling_frames = 10  # Numbers of frames required to confirm a not smile
 
-
+# Initialize the dlib's face detector
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+
+# Save the detected faces data
+faces_data = {}
 
 cap = cv2.VideoCapture(0)
 
 if not cap.isOpened():
     print("Error: Could not open video.")
     exit()
-
-
-# Save the detected faces data
-faces_data = {}
-print(f"Faces data: {faces_data}")
 
 while True:
     # Getting out image by webcam
@@ -78,11 +76,11 @@ while True:
             cv2.circle(image, (mx, my), 2, (0, 255, 0), -1)
 
         calculated_mar = calculate_mar(mouth_points)
-        print(f"MAR: {calculated_mar}")
+        #print(f"MAR: {calculated_mar}")
 
         # Identify the face by its index
         face_id = i
-        print(f"Face ID: {face_id}")
+        #print(f"Face ID: {face_id}")
 
         # Initialize the face data if it is not in the dictionary
         if face_id not in faces_data:
@@ -94,18 +92,18 @@ while True:
 
         # Obteining the current face data
         face_info = faces_data[face_id]
-        print(f"Faces data: {faces_data}")
+        #print(f"Faces data: {faces_data}")
 
         if calculated_mar < THRES:
             # Increment the smiling frames count
             face_info["smiling_frames_count"] += 1
             face_info["not_smiling_frames_count"] = 0
-            print(f"Smiling frames count: {face_info['smiling_frames_count']}")
+            #print(f"Smiling frames count: {face_info['smiling_frames_count']}")
 
             # Check if the required smiling frames are reached
             if face_info["smiling_frames_count"] >= required_smiling_frames:
                 face_info["smiling"] = True
-                print("Entré en sonrisa")
+                #print("Entré en sonrisa")
                 #cv2.putText(image, "Smiling", (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             #1, (0, 255, 0), 2)
         else:
@@ -130,6 +128,8 @@ while True:
 
     # Show the image
     cv2.imshow("Output", image)
+
+
 
     k = cv2.waitKey(5) & 0xFF
     if k == 27:
