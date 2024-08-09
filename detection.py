@@ -51,13 +51,28 @@ class SmileDetector(BaseDetector):
         mar = (B + C + D) / (3.0 * A)
         return mar
 
+    def get_face_id(self, rect):
+        x,y,w,h = face_utils.rect_to_bb(rect)
+        return f"{x}-{y}-{w}-{h}"
+
     def recv(self, frame):
         image = frame.to_ndarray(format="bgr24")
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         faceRects = detector(gray, 0)
 
-        for (i, rect) in enumerate(faceRects):
-            (x, y, w, h) = face_utils.rect_to_bb(rect)
+        current_faces = set()
+
+        for rect in faceRects:
+            face_id = self.get_face_id(rect)
+            current_faces.add(face_id)
+            if face_id not in self.faces_data:
+                self.faces_data[face_id] = {
+                    "smiling_frames_count": 0,
+                    "not_smiling_frames_count": 0,
+                    "smiling": False
+                }
+            face_info = self.faces_data[face_id]
+
             shape = predictor(gray, rect)
             shape = face_utils.shape_to_np(shape)
             mouth_points = shape[48:67]
@@ -66,16 +81,7 @@ class SmileDetector(BaseDetector):
                 cv2.circle(image, (mx, my), 2, (0, 255, 0), -1)
 
             calculated_mar = self.calculate_mar(mouth_points)
-            face_id = i
-
-            if face_id not in self.faces_data:
-                self.faces_data[face_id] = {
-                    "smiling_frames_count": 0,
-                    "not_smiling_frames_count": 0,
-                    "smiling": False
-                }
-
-            face_info = self.faces_data[face_id]
+            (x,y,w,h) = face_utils.rect_to_bb(rect)
 
             if calculated_mar < THRES:
                 face_info["smiling_frames_count"] += 1
@@ -98,6 +104,9 @@ class SmileDetector(BaseDetector):
                 cv2.putText(
                     image, "Not Smiling", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX,
                     0.6, (0, 0, 255), 2)
+
+        # Remove faces that are not detected
+        self.faces_data = {face_id: data for face_id, data in self.faces_data.items() if face_id in current_faces}
 
         return av.VideoFrame.from_ndarray(image, format="bgr24")
 
