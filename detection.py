@@ -30,7 +30,7 @@ class BaseDetector(VideoProcessorBase):
 
     def get_face_id(self, rect):
         x,y,w,h = face_utils.rect_to_bb(rect)
-        return f"{x}-{y}-{w}-{h}"
+        return f"{round(x / 10) * 10}-{round(y / 10) * 10}-{round(w / 10) * 10}-{round(h / 10) * 10}"
 
 class SmileDetector(BaseDetector):
     def __init__(self):
