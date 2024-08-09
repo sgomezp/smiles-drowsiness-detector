@@ -14,8 +14,8 @@ sound = mixer.Sound('alarm.wav')
 # Thresholds definition
 THRES = 0.24
 THRES_EAR = 0.2
-required_smiling_frames = 10
-required_not_smiling_frames = 10
+required_smiling_frames = 7
+required_not_smiling_frames = 7
 MAXIMUM_FRAME_COUNT = 10
 
 # Inicialización de Dlib
@@ -27,6 +27,10 @@ class BaseDetector(VideoProcessorBase):
         x1, y1 = a
         x2, y2 = b
         return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+    def get_face_id(self, rect):
+        x,y,w,h = face_utils.rect_to_bb(rect)
+        return f"{x}-{y}-{w}-{h}"
 
 class SmileDetector(BaseDetector):
     def __init__(self):
@@ -51,9 +55,6 @@ class SmileDetector(BaseDetector):
         mar = (B + C + D) / (3.0 * A)
         return mar
 
-    def get_face_id(self, rect):
-        x,y,w,h = face_utils.rect_to_bb(rect)
-        return f"{x}-{y}-{w}-{h}"
 
     def recv(self, frame):
         image = frame.to_ndarray(format="bgr24")
@@ -112,7 +113,7 @@ class SmileDetector(BaseDetector):
 
 class DrownsinessDetector(BaseDetector):
     def __init__(self):
-        self.eye_closed_counter = 0
+        self.faces_data = {}
 
     def eye_aspect_ratio(self, eye):
         "Calculate the Eye Aspect Ratio (EAR)"
@@ -130,15 +131,28 @@ class DrownsinessDetector(BaseDetector):
         # Return the eye aspect ratio
         return ear
 
+
     def recv(self, frame):
         image = frame.to_ndarray(format="bgr24")
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         faceRects = detector(gray, 0)
 
+        current_faces = set()
+
         leftEyeStart, leftEyeEnd = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
         rightEyeStart, rightEyeEnd = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
-        for (i, rect) in enumerate(faceRects):
+        for rect in faceRects:
+            face_id = self.get_face_id(rect)
+            current_faces.add(face_id)
+
+            if face_id not in self.faces_data:
+                self.faces_data[face_id] = {
+                    "eye_closed_counter": 0
+                }
+
+            face_info = self.faces_data[face_id]
+
             shape = predictor(gray, rect)
             shape = face_utils.shape_to_np(shape)
 
@@ -151,6 +165,7 @@ class DrownsinessDetector(BaseDetector):
 
             leftEyeHull = cv2.convexHull(leftEye)
             rightEyeHull = cv2.convexHull(rightEye)
+
             #cv2.drawContours(image, [leftEyeHull], -1, (0, 255, 0), 1)
             #cv2.drawContours(image, [rightEyeHull], -1, (0, 255, 0), 1)
 
@@ -170,6 +185,9 @@ class DrownsinessDetector(BaseDetector):
                     sound.stop()
                 except:
                     pass
+
+        # Remove faces that are not detected
+        self.faces_data = {face_id: data for face_id, data in self.faces_data.items() if face_id in current_faces}
 
         return av.VideoFrame.from_ndarray(image, format="bgr24")
 
