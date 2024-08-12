@@ -13,10 +13,10 @@ sound = mixer.Sound('alarm.wav')
 
 # Thresholds definition
 THRES = 0.24
-THRES_EAR = 0.2
+THRES_EAR = 0.15
 required_smiling_frames = 7
 required_not_smiling_frames = 7
-MAXIMUM_FRAME_COUNT = 10
+MAXIMUM_FRAME_COUNT = 4
 
 # Inicialización de Dlib
 detector = dlib.get_frontal_face_detector()
@@ -170,11 +170,11 @@ class DrownsinessDetector(BaseDetector):
             #cv2.drawContours(image, [rightEyeHull], -1, (0, 255, 0), 1)
 
             if ear < THRES_EAR:
-                self.eye_closed_counter += 1
+                face_info["eye_closed_counter"] += 1
             else:
-                self.eye_closed_counter = 0
+                face_info["eye_closed_counter"] = 0
 
-            if self.eye_closed_counter >= MAXIMUM_FRAME_COUNT:
+            if face_info["eye_closed_counter"] >= MAXIMUM_FRAME_COUNT:
                 cv2.putText(image, "DROWSINESS DETECTED", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 try:
                     sound.play()
