@@ -12,7 +12,7 @@ the user interface, dlib for facial detection and landmark points, and Pygame fo
 - **shape_predictor_68_face_landmarks.dat**: dlib model file for facial landmark detection. [link](https://github.com/italojs/facial-landmarks-recognition/blob/master/shape_predictor_68_face_landmarks.dat)
 
 # Usage Instructions
-1. Clone the repository to your local machine. link
+1. Clone the repository to your local machine. [link](https://github.com/sgomezp/smiles-drowsiness-detector.git)
 2. Navigate to the project directory.
 3. Optionally, create a virtual environment for the project. (highly recommended)
 4. Install dlip using the instructions below.
