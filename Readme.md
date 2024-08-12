@@ -73,20 +73,16 @@ If you encounter any issues during the installation, refer to the official dlib 
 - **Accuracy**: The accuracy of the detection algorithms may vary based on the quality of the webcam and the resolution of the video feed.
 - **Speed**: The speed of the detection algorithms may vary based on the processing power of the system.
 
-# Run the App on Streamlit Cloud
-You can run this app directly in the cloud using Streamlit. Click the link below to launch the application:
-
-[Run on Streamlit Cloud](https://smiles-drowsiness-detector.streamlit.app/)
 
 # Future Improvements
 - **Dockerization**: Dockerize the application for easier deployment and scalability.
 
-## Observations
+# Observations
 For optimal performance of the facial detection and recognition features, it is highly recommended
 to ensure good lighting conditions. Proper lighting enhances the accuracy of face detection and 
 improves the effectiveness of smile and drowsiness detection algorithms.
 
-### Performance Variability
+## Performance Variability
 Please be aware that detection performance may vary based on environmental conditions, such as lighting 
 and background. In low-light conditions or with significant background distractions, the system 
 may struggle to accurately detect faces, smiles, or signs of drowsiness. For best results, 
