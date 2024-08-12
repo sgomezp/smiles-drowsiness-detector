@@ -57,57 +57,64 @@ class SmileDetector(BaseDetector):
 
 
     def recv(self, frame):
-        image = frame.to_ndarray(format="bgr24")
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faceRects = detector(gray, 0)
+        try:
+            image = frame.to_ndarray(format="bgr24")
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            try:
+                faceRects = detector(gray, 0)
+            except Exception as e:
+                print(f"Error detecting faces: {e}")
+                faceRects = []
 
-        current_faces = set()
+            current_faces = set()
 
-        for rect in faceRects:
-            face_id = self.get_face_id(rect)
-            current_faces.add(face_id)
-            if face_id not in self.faces_data:
-                self.faces_data[face_id] = {
-                    "smiling_frames_count": 0,
-                    "not_smiling_frames_count": 0,
-                    "smiling": False
-                }
-            face_info = self.faces_data[face_id]
+            for rect in faceRects:
+                face_id = self.get_face_id(rect)
+                current_faces.add(face_id)
+                if face_id not in self.faces_data:
+                    self.faces_data[face_id] = {
+                        "smiling_frames_count": 0,
+                        "not_smiling_frames_count": 0,
+                        "smiling": False
+                    }
+                face_info = self.faces_data[face_id]
 
-            shape = predictor(gray, rect)
-            shape = face_utils.shape_to_np(shape)
-            mouth_points = shape[48:67]
+                shape = predictor(gray, rect)
+                shape = face_utils.shape_to_np(shape)
+                mouth_points = shape[48:67]
 
-            for (mx, my) in mouth_points:
-                cv2.circle(image, (mx, my), 2, (0, 255, 0), -1)
+                for (mx, my) in mouth_points:
+                    cv2.circle(image, (mx, my), 2, (0, 255, 0), -1)
 
-            calculated_mar = self.calculate_mar(mouth_points)
-            (x,y,w,h) = face_utils.rect_to_bb(rect)
+                calculated_mar = self.calculate_mar(mouth_points)
+                (x,y,w,h) = face_utils.rect_to_bb(rect)
 
-            if calculated_mar < THRES:
-                face_info["smiling_frames_count"] += 1
-                face_info["not_smiling_frames_count"] = 0
+                if calculated_mar < THRES:
+                    face_info["smiling_frames_count"] += 1
+                    face_info["not_smiling_frames_count"] = 0
 
-                if face_info["smiling_frames_count"] >= required_smiling_frames:
-                    face_info["smiling"] = True
-            else:
-                face_info["not_smiling_frames_count"] += 1
-                face_info["smiling_frames_count"] = 0
+                    if face_info["smiling_frames_count"] >= required_smiling_frames:
+                        face_info["smiling"] = True
+                else:
+                    face_info["not_smiling_frames_count"] += 1
+                    face_info["smiling_frames_count"] = 0
 
-                if face_info["not_smiling_frames_count"] >= required_not_smiling_frames:
-                    face_info["smiling"] = False
+                    if face_info["not_smiling_frames_count"] >= required_not_smiling_frames:
+                        face_info["smiling"] = False
 
-            if face_info["smiling"]:
-                cv2.putText(
-                    image, "Smiling", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, (0, 255, 0), 2)
-            else:
-                cv2.putText(
-                    image, "Not Smiling", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, (0, 0, 255), 2)
+                if face_info["smiling"]:
+                    cv2.putText(
+                        image, "Smiling", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6, (0, 255, 0), 2)
+                else:
+                    cv2.putText(
+                        image, "Not Smiling", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6, (0, 0, 255), 2)
 
-        # Remove faces that are not detected
-        self.faces_data = {face_id: data for face_id, data in self.faces_data.items() if face_id in current_faces}
+            # Remove faces that are not detected
+            self.faces_data = {face_id: data for face_id, data in self.faces_data.items() if face_id in current_faces}
+        except Exception as e:
+            print(f"Error processing frame in DrowsinessDetector: {e}")
 
         return av.VideoFrame.from_ndarray(image, format="bgr24")
 
@@ -133,61 +140,70 @@ class DrownsinessDetector(BaseDetector):
 
 
     def recv(self, frame):
-        image = frame.to_ndarray(format="bgr24")
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faceRects = detector(gray, 0)
+        try:
+            image = frame.to_ndarray(format="bgr24")
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        current_faces = set()
+            try:
+                faceRects = detector(gray, 0)
+            except Exception as e:
+                st.info(f"Error detecting faces: {e}")
+                faceRects = []
 
-        leftEyeStart, leftEyeEnd = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
-        rightEyeStart, rightEyeEnd = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
+            current_faces = set()
 
-        for rect in faceRects:
-            face_id = self.get_face_id(rect)
-            current_faces.add(face_id)
+            leftEyeStart, leftEyeEnd = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
+            rightEyeStart, rightEyeEnd = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
-            if face_id not in self.faces_data:
-                self.faces_data[face_id] = {
-                    "eye_closed_counter": 0
-                }
+            for rect in faceRects:
+                face_id = self.get_face_id(rect)
+                current_faces.add(face_id)
 
-            face_info = self.faces_data[face_id]
+                if face_id not in self.faces_data:
+                    self.faces_data[face_id] = {
+                        "eye_closed_counter": 0
+                    }
 
-            shape = predictor(gray, rect)
-            shape = face_utils.shape_to_np(shape)
+                face_info = self.faces_data[face_id]
 
-            leftEye = shape[leftEyeStart:leftEyeEnd]
-            rightEye = shape[rightEyeStart:rightEyeEnd]
+                shape = predictor(gray, rect)
+                shape = face_utils.shape_to_np(shape)
 
-            leftEAR = self.eye_aspect_ratio(leftEye)
-            rightEAR = self.eye_aspect_ratio(rightEye)
-            ear = (leftEAR + rightEAR) / 2.0
+                leftEye = shape[leftEyeStart:leftEyeEnd]
+                rightEye = shape[rightEyeStart:rightEyeEnd]
 
-            leftEyeHull = cv2.convexHull(leftEye)
-            rightEyeHull = cv2.convexHull(rightEye)
+                leftEAR = self.eye_aspect_ratio(leftEye)
+                rightEAR = self.eye_aspect_ratio(rightEye)
+                ear = (leftEAR + rightEAR) / 2.0
 
-            #cv2.drawContours(image, [leftEyeHull], -1, (0, 255, 0), 1)
-            #cv2.drawContours(image, [rightEyeHull], -1, (0, 255, 0), 1)
+                leftEyeHull = cv2.convexHull(leftEye)
+                rightEyeHull = cv2.convexHull(rightEye)
 
-            if ear < THRES_EAR:
-                face_info["eye_closed_counter"] += 1
-            else:
-                face_info["eye_closed_counter"] = 0
+                #cv2.drawContours(image, [leftEyeHull], -1, (0, 255, 0), 1)
+                #cv2.drawContours(image, [rightEyeHull], -1, (0, 255, 0), 1)
 
-            if face_info["eye_closed_counter"] >= MAXIMUM_FRAME_COUNT:
-                cv2.putText(image, "DROWSINESS DETECTED", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                try:
-                    sound.play()
-                except:
-                    pass
-            else:
-                try:
-                    sound.stop()
-                except:
-                    pass
+                if ear < THRES_EAR:
+                    face_info["eye_closed_counter"] += 1
+                else:
+                    face_info["eye_closed_counter"] = 0
 
-        # Remove faces that are not detected
-        self.faces_data = {face_id: data for face_id, data in self.faces_data.items() if face_id in current_faces}
+                if face_info["eye_closed_counter"] >= MAXIMUM_FRAME_COUNT:
+                    cv2.putText(image, "DROWSINESS DETECTED", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    try:
+                        sound.play()
+                    except:
+                        pass
+                else:
+                    try:
+                        sound.stop()
+                    except:
+                        pass
+
+            # Remove faces that are not detected
+            self.faces_data = {face_id: data for face_id, data in self.faces_data.items() if face_id in current_faces}
+
+        except Exception as e:
+            print(f"Error processing frame in Drowsiness Detector: {e}")
 
         return av.VideoFrame.from_ndarray(image, format="bgr24")
 
