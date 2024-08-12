@@ -8,6 +8,8 @@ the user interface, dlib for facial detection and landmark points, and Pygame fo
 - **detection.py**: Main file for the Streamlit application.
 - **.gitignore**: File to specify which files and directories to ignore in the repository.
 - **requirements.txt**: File containing the project dependencies.
+- **package.txt**: This file installs system dependencies needed in deployment environments like Streamlit Share. It 
+  ensures OpenCV works by including libraries like libGL1 for graphics.
 - **alarm.wav**: Sound file used for the drowsiness alert.
 - **shape_predictor_68_face_landmarks.dat**: dlib model file for facial landmark detection. [link](https://github.com/italojs/facial-landmarks-recognition/blob/master/shape_predictor_68_face_landmarks.dat)
 
@@ -70,6 +72,11 @@ If you encounter any issues during the installation, refer to the official dlib 
 - **Background Noise**: The drowsiness alarm may not be effective in noisy environments.
 - **Accuracy**: The accuracy of the detection algorithms may vary based on the quality of the webcam and the resolution of the video feed.
 - **Speed**: The speed of the detection algorithms may vary based on the processing power of the system.
+
+# Run the App on Streamlit Cloud
+You can run this app directly in the cloud using Streamlit. Click the link below to launch the application:
+
+[Run on Streamlit Cloud](https://smiles-drowsiness-detector.streamlit.app/)
 
 # Future Improvements
 - **Dockerization**: Dockerize the application for easier deployment and scalability.
