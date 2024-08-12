@@ -1,0 +1,6 @@
+imutils
+opencv-python
+pygame
+streamlit
+streamlit-webrtc
+av
