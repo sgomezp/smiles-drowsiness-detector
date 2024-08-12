@@ -1,5 +1,6 @@
+opencv-python-headless
 imutils
-opencv-python
+# opencv-python
 pygame
 streamlit
 streamlit-webrtc
