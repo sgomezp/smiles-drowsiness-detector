@@ -8,8 +8,6 @@ the user interface, dlib for facial detection and landmark points, and Pygame fo
 - **detection.py**: Main file for the Streamlit application.
 - **.gitignore**: File to specify which files and directories to ignore in the repository.
 - **requirements.txt**: File containing the project dependencies.
-- **package.txt**: This file installs system dependencies needed in deployment environments like Streamlit Share. It 
-  ensures OpenCV works by including libraries like libGL1 for graphics.
 - **alarm.wav**: Sound file used for the drowsiness alert.
 - **shape_predictor_68_face_landmarks.dat**: dlib model file for facial landmark detection. [link](https://github.com/italojs/facial-landmarks-recognition/blob/master/shape_predictor_68_face_landmarks.dat)
 
